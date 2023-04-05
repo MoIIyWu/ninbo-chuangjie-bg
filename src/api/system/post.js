@@ -43,3 +43,11 @@ export function delPost(data) {
     data,
   });
 }
+
+// 删除图片
+export function delImg(fileName) {
+  return request({
+    url: `/api/common/deleteData?fileName=${fileName}`,
+    method: "delete",
+  });
+}

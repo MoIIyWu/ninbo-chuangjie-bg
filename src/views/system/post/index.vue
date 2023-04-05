@@ -70,7 +70,7 @@
       <el-table-column label="序号" width="100" align="center" type="index" />
       <el-table-column label="产品类型" align="center" prop="productType" />
       <el-table-column label="产品名称" align="center" prop="fileName" />
-      <el-table-column label="产品图片" align="center" :formatter="formatter">
+      <el-table-column label="产品图片" align="center" prop="fileUrl">
         <template scope="scope">
           <img
             :src="`${GLOBAL.BASE_URL}/api/common/open/download?name=${scope.row.fileUrl}`"
@@ -80,6 +80,15 @@
         </template>
       </el-table-column>
       <el-table-column label="产品说明" align="center" prop="manual" />
+      <el-table-column label="产品参数" align="center" prop="productParam">
+        <template scope="scope">
+          <img
+            :src="`${GLOBAL.BASE_URL}/api/common/open/download?name=${scope.row.productParam}`"
+            width="100px"
+            height="100px"
+          />
+        </template>
+      </el-table-column>
       <el-table-column
         label="操作"
         align="center"
@@ -120,8 +129,8 @@
         <el-form-item label="产品名称" prop="fileName">
           <el-input v-model="form.fileName" placeholder="请输入产品名称" />
         </el-form-item>
-        <!-- 新增产品 -->
-        <el-form-item label="产品图片" prop="fileUrl" v-if="!this.form.id">
+        <!-- 新增或者修改产品 -->
+        <el-form-item label="产品图片" prop="fileUrl">
           <el-upload
             class="upload-demo"
             :action="`${GLOBAL.BASE_URL}/api/common/upload`"
@@ -135,32 +144,20 @@
             :on-success="onSuccess"
             :headers="headers"
           >
-            <el-button size="small" type="primary">点击上传</el-button>
-          </el-upload>
-        </el-form-item>
-        <!-- 修改图片 -->
-        <el-form-item label="产品图片" prop="fileUrl" v-else>
-          <el-upload
-            class="upload-demo"
-            :action="`${GLOBAL.BASE_URL}/api/common/upload`"
-            :on-preview="handlePreview"
-            :on-remove="handleRemove"
-            :before-remove="beforeRemove"
-            multiple
-            :limit="1"
-            :on-exceed="handleExceed"
-            :file-list="fileList"
-            :on-success="onSuccess"
-            :headers="headers"
-          >
-            <div>
+            <el-button size="small" type="primary" v-if="!this.form.id"
+              >点击上传</el-button
+            >
+            <div v-else>
               <img
                 :src="`${GLOBAL.BASE_URL}/api/common/open/download?name=${this.form.fileUrl}`"
                 width="100px"
                 height="100px"
+                style="display: block; margin-bottom: 10px"
               />
+              <el-button size="small" type="primary"
+                >点击更换产品图片</el-button
+              >
             </div>
-            <el-button size="small" type="primary">点击更换产品图片</el-button>
           </el-upload>
         </el-form-item>
         <el-form-item label="产品类型" prop="productType">
@@ -168,6 +165,37 @@
         </el-form-item>
         <el-form-item label="产品说明" prop="manual">
           <el-input v-model="form.manual" placeholder="请输入产品说明" />
+        </el-form-item>
+        <!-- 新增或者修改产品参数 -->
+        <el-form-item label="产品参数" prop="productParam">
+          <el-upload
+            class="upload-demo"
+            :action="`${GLOBAL.BASE_URL}/api/common/upload`"
+            :on-preview="productParamHandlePreview"
+            :on-remove="productParamHandleRemove"
+            :before-remove="productParamHandBeforeRemove"
+            multiple
+            :limit="1"
+            :on-exceed="productParamHandleExceed"
+            :file-list="productParamFileList"
+            :on-success="productParamOnSuccess"
+            :headers="headers"
+          >
+            <el-button size="small" type="primary" v-if="!this.form.id"
+              >点击上传</el-button
+            >
+            <div v-else>
+              <img
+                :src="`${GLOBAL.BASE_URL}/api/common/open/download?name=${this.form.productParam}`"
+                width="100px"
+                height="100px"
+                style="display: block; margin-bottom: 10px"
+              />
+              <el-button size="small" type="primary"
+                >点击更换产品参数图片</el-button
+              >
+            </div>
+          </el-upload>
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
@@ -186,6 +214,7 @@ import {
   delPost,
   addPost,
   updatePost,
+  delImg,
 } from "@/api/system/post";
 
 export default {
@@ -197,6 +226,7 @@ export default {
         Authorization: "Bearer " + store.getters.token, //headers属性中添加token，这个属性是el-upload自带的用来设置上传请求头部
       },
       fileList: [],
+      productParamFileList: [],
       // 图片的路径
       imgUrl: "",
       // 遮罩层
@@ -227,14 +257,14 @@ export default {
       form: {},
       // 表单校验
       rules: {
-        postName: [
+        fileName: [
           { required: true, message: "产品名称不能为空", trigger: "blur" },
         ],
-        postCode: [
-          { required: true, message: "产品编码不能为空", trigger: "blur" },
+        productType: [
+          { required: true, message: "产品类型不能为空", trigger: "blur" },
         ],
-        postSort: [
-          { required: true, message: "产品顺序不能为空", trigger: "blur" },
+        manual: [
+          { required: true, message: "产品说明不能为空", trigger: "blur" },
         ],
       },
     };
@@ -256,9 +286,6 @@ export default {
           this.$modal.msgSuccess("删除成功");
         })
         .catch(() => {});
-    },
-    formatter(row, column) {
-      return row.fileUrl;
     },
     /** 查询产品列表 */
     getList() {
@@ -284,7 +311,7 @@ export default {
         manual: "",
       };
       this.fileList = [];
-      this.resetForm("form");
+      (this.productParamFileList = []), this.resetForm("form");
     },
     /** 搜索按钮操作 */
     handleQuery() {
@@ -362,10 +389,19 @@ export default {
       );
     },
 
-    handleRemove(file, fileList) {
-      console.log(file, fileList);
+    async handleRemove(file, fileList) {
+      console.log(file, this.fileList,'file, this.fileList==')
+      console.log(this.fileList[0].response.msg, "this.fileList[0].response.msg==");
+      await delImg(this.fileList[0].response.msg);
+      this.$modal.msgSuccess("删除成功");
+    },
+    productParamHandleRemove(file, productParamFileList) {
+      console.log(file, productParamFileList);
     },
     handlePreview(file) {
+      console.log(file);
+    },
+    productParamHandlePreview(file) {
       console.log(file);
     },
     handleExceed(files, fileList) {
@@ -375,12 +411,27 @@ export default {
         } 个文件`
       );
     },
+    productParamHandleExceed(files, productParamFileList) {
+      this.$message.warning(
+        `当前限制选择 1 个文件，本次选择了 ${files.length} 个文件，共选择了 ${
+          files.length + productParamFileList.length
+        } 个文件`
+      );
+    },
     beforeRemove(file, fileList) {
       return this.$confirm(`确定移除 ${file.name}？`);
     },
+    productParamHandBeforeRemove(file, productParamFileList) {
+      return this.$confirm(`确定移除 ${file.name}？`);
+    },
     onSuccess(response, file, fileList) {
-      console.log("response===", response.msg);
+      this.fileList = fileList;
       this.form.fileUrl = response.msg;
+    },
+    productParamOnSuccess(response, file, productParamFileList) {
+      console.log("response===productParam", response.msg);
+      this.productParamFileList = productParamFileList;
+      this.form.productParam = response.msg;
     },
   },
 };
