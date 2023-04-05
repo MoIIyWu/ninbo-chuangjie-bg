@@ -9,36 +9,37 @@ export function listNotice(query) {
   })
 }
 
-// 查询公告详细
-export function getNotice(noticeId) {
+// 查询新闻详细
+export function getNotice(id) {
   return request({
-    url: '/system/notice/' + noticeId,
+    url: `/api/news/open/${id}`,
     method: 'get'
   })
 }
 
-// 新增公告
+// 新增新闻
 export function addNotice(data) {
   return request({
-    url: '/system/notice',
+    url: '/api/news',
     method: 'post',
     data: data
   })
 }
 
-// 修改公告
+// 修改新闻列表
 export function updateNotice(data) {
   return request({
-    url: '/system/notice',
+    url: '/api/news',
     method: 'put',
     data: data
   })
 }
 
-// 删除公告
-export function delNotice(noticeId) {
+// 删除新闻列表
+export function delNotice(ids) {
   return request({
-    url: '/system/notice/' + noticeId,
-    method: 'delete'
+    url: `/api/news`,
+    method: 'delete',
+    data:ids
   })
 }

@@ -1,6 +1,14 @@
 <template>
   <div class="app-container">
-    <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" v-show="showSearch" label-width="68px" @submit.native.prevent>
+    <el-form
+      :model="queryParams"
+      ref="queryForm"
+      size="small"
+      :inline="true"
+      v-show="showSearch"
+      label-width="68px"
+      @submit.native.prevent
+    >
       <el-form-item label="新闻标题" prop="title">
         <el-input
           v-model="queryParams.keyword"
@@ -10,7 +18,13 @@
         />
       </el-form-item>
       <el-form-item>
-        <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">搜索</el-button>
+        <el-button
+          type="primary"
+          icon="el-icon-search"
+          size="mini"
+          @click="handleQuery"
+          >搜索</el-button
+        >
       </el-form-item>
     </el-form>
 
@@ -23,18 +37,8 @@
           size="mini"
           @click="handleAdd"
           v-hasPermi="['system:notice:add']"
-        >新增</el-button>
-      </el-col>
-      <el-col :span="1.5">
-        <el-button
-          type="success"
-          plain
-          icon="el-icon-edit"
-          size="mini"
-          :disabled="single"
-          @click="handleUpdate"
-          v-hasPermi="['system:notice:edit']"
-        >修改</el-button>
+          >新增</el-button
+        >
       </el-col>
       <el-col :span="1.5">
         <el-button
@@ -45,12 +49,16 @@
           :disabled="multiple"
           @click="handleDelete"
           v-hasPermi="['system:notice:remove']"
-        >删除</el-button>
+          >删除</el-button
+        >
       </el-col>
-      <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
     </el-row>
 
-    <el-table v-loading="loading" :data="noticeList" @selection-change="handleSelectionChange">
+    <el-table
+      v-loading="loading"
+      :data="noticeList"
+      @selection-change="handleSelectionChange"
+    >
       <el-table-column type="selection" width="55" align="center" />
       <el-table-column label="序号" width="100" align="center" type="index" />
       <el-table-column
@@ -62,20 +70,45 @@
       <el-table-column label="新闻图片" align="center" :formatter="formatter">
         <template scope="scope">
           <img
-            :src="`https://8e8f385.r5.vip.cpolar.cn/api/common/open/download?name=${scope.row.fileUrl}`"
+            :src="`${GLOBAL.BASE_URL}/api/common/open/download?name=${scope.row.fileUrl}`"
             width="100px"
             height="100px"
           />
         </template>
       </el-table-column>
-      <el-table-column label="创建时间" align="center" prop="createTime" width="100">
+      <el-table-column
+        label="创建时间"
+        align="center"
+        prop="createTime"
+        width="100"
+      >
         <template slot-scope="scope">
-          <span>{{ parseTime(scope.row.createTime, '{y}-{m}-{d}') }}</span>
+          <span>{{ parseTime(scope.row.createTime, "{y}-{m}-{d}") }}</span>
         </template>
       </el-table-column>
       <el-table-column label="来源" align="center" prop="source" width="100" />
-      <el-table-column label="点击次数" align="center" prop="clickCount" width="100" />
-      <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
+      <el-table-column
+        label="点击次数"
+        align="center"
+        prop="clickCount"
+        width="100"
+      />
+      <el-table-column
+        label="新闻内容"
+        align="center"
+        prop="content"
+        width="100"
+        :show-overflow-tooltip="true"
+      >
+        <template slot-scope="scope">
+          <p v-html="scope.row.content"></p>
+        </template>
+      </el-table-column>
+      <el-table-column
+        label="操作"
+        align="center"
+        class-name="small-padding fixed-width"
+      >
         <template slot-scope="scope">
           <el-button
             size="mini"
@@ -83,61 +116,88 @@
             icon="el-icon-edit"
             @click="handleUpdate(scope.row)"
             v-hasPermi="['system:notice:edit']"
-          >修改</el-button>
+            >修改</el-button
+          >
           <el-button
             size="mini"
             type="text"
             icon="el-icon-delete"
-            @click="handleDelete(scope.row)"
+            @click="handleDeleteById(scope.row)"
             v-hasPermi="['system:notice:remove']"
-          >删除</el-button>
+            >删除</el-button
+          >
         </template>
       </el-table-column>
     </el-table>
 
     <pagination
-      v-show="total>0"
+      v-show="total > 0"
       :total="total"
       :page.sync="queryParams.page"
       :limit.sync="queryParams.pageSize"
       @pagination="getList"
     />
 
-    <!-- 添加或修改公告对话框 -->
+    <!-- 添加或修改新闻对话框 -->
     <el-dialog :title="title" :visible.sync="open" width="780px" append-to-body>
       <el-form ref="form" :model="form" :rules="rules" label-width="80px">
         <el-row>
           <el-col :span="12">
-            <el-form-item label="公告标题" prop="noticeTitle">
-              <el-input v-model="form.noticeTitle" placeholder="请输入公告标题" />
+            <el-form-item label="新闻标题" prop="title">
+              <el-input v-model="form.title" placeholder="请输入新闻标题" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="公告类型" prop="noticeType">
-              <el-select v-model="form.noticeType" placeholder="请选择公告类型">
-                <el-option
-                  v-for="dict in dict.type.sys_notice_type"
-                  :key="dict.value"
-                  :label="dict.label"
-                  :value="dict.value"
-                ></el-option>
-              </el-select>
+            <el-form-item label="来源" prop="source">
+              <el-input v-model="form.source" placeholder="请输入新闻来源" />
+            </el-form-item>
+          </el-col>
+          <el-col>
+            <el-form-item label="新闻图片" prop="fileUrl" v-if="!form.id">
+              <el-upload
+                class="upload-demo"
+                :action="`${GLOBAL.BASE_URL}/api/common/upload`"
+                :on-preview="handlePreview"
+                :on-remove="handleRemove"
+                :before-remove="beforeRemove"
+                multiple
+                :limit="1"
+                :on-exceed="handleExceed"
+                :file-list="fileList"
+                :on-success="onSuccess"
+                :headers="headers"
+              >
+                <el-button size="small" type="primary">点击上传</el-button>
+              </el-upload>
+            </el-form-item>
+            <el-form-item label="新闻图片" prop="fileUrl" v-else>
+              <el-upload
+                class="upload-demo"
+                :action="`${GLOBAL.BASE_URL}/api/common/upload`"
+                :on-preview="handlePreview"
+                :on-remove="handleRemove"
+                :before-remove="beforeRemove"
+                multiple
+                :limit="1"
+                :on-exceed="handleExceed"
+                :file-list="fileList"
+                :on-success="onSuccess"
+                :headers="headers"
+              >
+              <div>
+              <img
+                :src="`${GLOBAL.BASE_URL}/api/common/open/download?name=${this.form.fileUrl}`"
+                width="100px"
+                height="100px"
+              />
+            </div>
+                <el-button size="small" type="primary">点击更换新闻图片</el-button>
+              </el-upload>
             </el-form-item>
           </el-col>
           <el-col :span="24">
-            <el-form-item label="状态">
-              <el-radio-group v-model="form.status">
-                <el-radio
-                  v-for="dict in dict.type.sys_notice_status"
-                  :key="dict.value"
-                  :label="dict.value"
-                >{{dict.label}}</el-radio>
-              </el-radio-group>
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="内容">
-              <editor v-model="form.noticeContent" :min-height="192"/>
+            <el-form-item label="内容" prop="content">
+              <editor v-model="form.content" :min-height="192" />
             </el-form-item>
           </el-col>
         </el-row>
@@ -151,13 +211,24 @@
 </template>
 
 <script>
-import { listNotice, getNotice, delNotice, addNotice, updateNotice } from "@/api/system/notice";
+import {
+  listNotice,
+  getNotice,
+  delNotice,
+  addNotice,
+  updateNotice,
+} from "@/api/system/notice";
+import store from "@/store";
 
 export default {
   name: "Notice",
-  dicts: ['sys_notice_status', 'sys_notice_type'],
+  dicts: ["sys_notice_status", "sys_notice_type"],
   data() {
     return {
+      headers: {
+        Authorization: "Bearer " + store.getters.token, //headers属性中添加token，这个属性是el-upload自带的用来设置上传请求头部
+      },
+      fileList: [],
       // 遮罩层
       loading: true,
       // 选中数组
@@ -170,7 +241,7 @@ export default {
       showSearch: true,
       // 总条数
       total: 0,
-      // 公告表格数据
+      // 新闻表格数据
       noticeList: [],
       // 弹出层标题
       title: "",
@@ -180,29 +251,29 @@ export default {
       queryParams: {
         page: 1,
         pageSize: 10,
-        keyword:''
+        keyword: "",
       },
       // 表单参数
       form: {},
       // 表单校验
       rules: {
-        noticeTitle: [
-          { required: true, message: "公告标题不能为空", trigger: "blur" }
+        title: [
+          { required: true, message: "新闻标题不能为空", trigger: "blur" },
         ],
-        noticeType: [
-          { required: true, message: "公告类型不能为空", trigger: "change" }
-        ]
-      }
+        source: [
+          { required: true, message: "新闻来源不能为空", trigger: "change" },
+        ],
+      },
     };
   },
   created() {
     this.getList();
   },
   methods: {
-    /** 查询公告列表 */
+    /** 查询新闻列表 */
     getList() {
       this.loading = true;
-      listNotice(this.queryParams).then(response => {
+      listNotice(this.queryParams).then((response) => {
         this.noticeList = response.data.records;
         this.total = response.data.total;
         this.loading = false;
@@ -216,12 +287,12 @@ export default {
     // 表单重置
     reset() {
       this.form = {
-        noticeId: undefined,
-        noticeTitle: undefined,
-        noticeType: undefined,
-        noticeContent: undefined,
-        status: "0"
+        title: "",
+        content: "",
+        fileUrl: "",
+        source:''
       };
+      this.fileList = [];
       this.resetForm("form");
     },
     /** 搜索按钮操作 */
@@ -231,38 +302,38 @@ export default {
     },
     // 多选框选中数据
     handleSelectionChange(selection) {
-      this.ids = selection.map(item => item.noticeId)
-      this.single = selection.length!=1
-      this.multiple = !selection.length
+      this.ids = selection.map((item) => item.id);
+      this.single = selection.length != 1;
+      this.multiple = !selection.length;
     },
     /** 新增按钮操作 */
     handleAdd() {
       this.reset();
       this.open = true;
-      this.title = "添加公告";
+      this.title = "添加新闻";
     },
     /** 修改按钮操作 */
     handleUpdate(row) {
       this.reset();
-      const noticeId = row.noticeId || this.ids
-      getNotice(noticeId).then(response => {
+      const id = row.id;
+      getNotice(id).then((response) => {
         this.form = response.data;
         this.open = true;
-        this.title = "修改公告";
+        this.title = "修改新闻";
       });
     },
     /** 提交按钮 */
-    submitForm: function() {
-      this.$refs["form"].validate(valid => {
+    submitForm: function () {
+      this.$refs["form"].validate((valid) => {
         if (valid) {
-          if (this.form.noticeId != undefined) {
-            updateNotice(this.form).then(response => {
+          if (this.form.id != "") {
+            updateNotice(this.form).then((response) => {
               this.$modal.msgSuccess("修改成功");
               this.open = false;
               this.getList();
             });
           } else {
-            addNotice(this.form).then(response => {
+            addNotice(this.form).then((response) => {
               this.$modal.msgSuccess("新增成功");
               this.open = false;
               this.getList();
@@ -272,18 +343,66 @@ export default {
       });
     },
     /** 删除按钮操作 */
-    handleDelete(row) {
-      const noticeIds = row.noticeId || this.ids
-      this.$modal.confirm('是否确认删除公告编号为"' + noticeIds + '"的数据项？').then(function() {
-        return delNotice(noticeIds);
-      }).then(() => {
-        this.getList();
-        this.$modal.msgSuccess("删除成功");
-      }).catch(() => {});
+    handleDelete() {
+      let _this = this;
+      this.$modal
+        .confirm('是否确认删除该新闻?')
+        .then(function () {
+          return delNotice(_this.ids);
+        })
+        .then(() => {
+          this.getList();
+          this.$modal.msgSuccess("删除成功");
+        })
+        .catch(() => {});
+    },
+    handleDeleteById(row){
+      let deleteArr = [];
+      deleteArr.push(row.id);
+      this.$modal
+        .confirm('是否确认删除该新闻?')
+        .then(function () {
+          return delNotice(deleteArr);
+        })
+        .then(() => {
+          this.getList();
+          this.$modal.msgSuccess("删除成功");
+        })
+        .catch(() => {});
     },
     formatter(row, column) {
       return row.fileUrl;
     },
-  }
+
+    // 删除图片
+    handleRemove(file, fileList) {
+      console.log(file, fileList);
+    },
+    handlePreview(file) {
+      console.log(file);
+    },
+    handleExceed(files, fileList) {
+      this.$message.warning(
+        `当前限制选择 1 个文件，本次选择了 ${files.length} 个文件，共选择了 ${
+          files.length + fileList.length
+        } 个文件`
+      );
+    },
+    beforeRemove(file, fileList) {
+      return this.$confirm(`确定移除 ${file.name}？`);
+    },
+    onSuccess(response, file, fileList) {
+      console.log("response===", response.msg);
+      this.form.fileUrl = response.msg;
+    },
+  },
 };
 </script>
+<style lang="scss" scoped></style>
+<style>
+.el-tooltip__popper {
+  max-width: 500px;
+  background: rgb(0, 13, 53);
+  border: 1px solid #1e88c6;
+}
+</style>

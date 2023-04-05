@@ -73,7 +73,7 @@
       <el-table-column label="产品图片" align="center" :formatter="formatter">
         <template scope="scope">
           <img
-            :src="`https://8e8f385.r5.vip.cpolar.cn/api/common/open/download?name=${scope.row.fileUrl}`"
+            :src="`${GLOBAL.BASE_URL}/api/common/open/download?name=${scope.row.fileUrl}`"
             width="100px"
             height="100px"
           />
@@ -124,7 +124,7 @@
         <el-form-item label="产品图片" prop="fileUrl" v-if="!this.form.id">
           <el-upload
             class="upload-demo"
-            action="http://192.168.31.230:8080/api/common/upload"
+            :action="`${GLOBAL.BASE_URL}/api/common/upload`"
             :on-preview="handlePreview"
             :on-remove="handleRemove"
             :before-remove="beforeRemove"
@@ -142,7 +142,7 @@
         <el-form-item label="产品图片" prop="fileUrl" v-else>
           <el-upload
             class="upload-demo"
-            action="http://192.168.31.230:8080/api/common/upload"
+            :action="`${GLOBAL.BASE_URL}/api/common/upload`"
             :on-preview="handlePreview"
             :on-remove="handleRemove"
             :before-remove="beforeRemove"
@@ -155,15 +155,14 @@
           >
             <div>
               <img
-                :src="`http://192.168.31.230:8080/api/common/open/download?name=${this.form.fileUrl}`"
+                :src="`${GLOBAL.BASE_URL}/api/common/open/download?name=${this.form.fileUrl}`"
                 width="100px"
                 height="100px"
               />
             </div>
-            <el-button size="small" type="primary">点击修改</el-button>
+            <el-button size="small" type="primary">点击更换产品图片</el-button>
           </el-upload>
         </el-form-item>
-
         <el-form-item label="产品类型" prop="productType">
           <el-input v-model="form.productType" placeholder="请输入产品名称" />
         </el-form-item>

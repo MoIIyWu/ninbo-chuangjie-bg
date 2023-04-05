@@ -78,6 +78,10 @@ Vue.use(Element, {
 
 Vue.config.productionTip = false
 
+// 在入口文件main.js中引入，设置为全局变量
+import global_ from '@/config/global.js'
+Vue.prototype.GLOBAL = global_;
+
 new Vue({
   el: '#app',
   router,
