@@ -1,5 +1,23 @@
 import request from '@/utils/request'
 
+
+//修改关于我们
+export function updateAbout(fromWe) {
+  return request({
+    url: '/api/fromWe/updateAbout',
+    method: 'put',
+    data: fromWe
+  })
+}
+
+// 查询关于我们
+export function getAbout() {
+  return request({
+    url: '/api/fromWe/open/getAbout',
+    method: 'get',
+  })
+}
+
 // 查询部门列表
 export function listDept(query) {
   return request({
