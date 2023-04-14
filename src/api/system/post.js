@@ -1,5 +1,13 @@
 import request from "@/utils/request";
 
+// 获取所有分类
+export function getGroupList() {
+  return request({
+    url: "/api/group/open/getAllGroup",
+    method: "get"
+  });
+}
+
 // 查询产品列表
 export function listPost(data) {
   return request({
