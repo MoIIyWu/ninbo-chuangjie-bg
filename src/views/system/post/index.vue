@@ -1,10 +1,11 @@
 <template>
   <div class="app-container">
     <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" v-show="showSearch" label-width="68px"
-      @submit.native.prevent>
+             @submit.native.prevent>
       <el-form-item label="搜索产品" prop="fileName
                                       ">
-        <el-input v-model="queryParams.keyword" placeholder="请输入产品名称" clearable @keyup.enter.native="handleQuery" />
+        <el-input v-model="queryParams.keyword" placeholder="请输入产品名称" clearable
+                  @keyup.enter.native="handleQuery"/>
       </el-form-item>
       <el-form-item>
         <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">搜索</el-button>
@@ -17,91 +18,102 @@
     <el-row :gutter="10" class="mb8">
       <el-col :span="1.5">
         <el-button type="primary" plain icon="el-icon-plus" size="mini" @click="handleAdd"
-          v-hasPermi="['system:post:add']">新增</el-button>
+                   v-hasPermi="['system:post:add']">新增
+        </el-button>
       </el-col>
       <el-col :span="1.5">
         <el-button type="danger" plain icon="el-icon-delete" size="mini" :disabled="multiple" @click="handleDelete"
-          v-hasPermi="['system:post:remove']">删除</el-button>
+                   v-hasPermi="['system:post:remove']">删除
+        </el-button>
       </el-col>
       <el-col :span="1.5">
         <el-button type="warning" plain icon="el-icon-plus" size="mini" @click="addGroup"
-          v-hasPermi="['system:post:remove']">添加分类</el-button>
+                   v-hasPermi="['system:post:remove']">添加分类
+        </el-button>
       </el-col>
     </el-row>
 
     <el-table v-loading="loading" :data="postList" @selection-change="handleSelectionChange">
-      <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="序号" width="100" align="center" type="index" />
-      <el-table-column label="产品分类" align="center" prop="productType" />
-      <el-table-column label="产品名称" align="center" prop="fileName" />
+      <el-table-column type="selection" width="55" align="center"/>
+      <el-table-column label="序号" width="100" align="center" type="index"/>
+      <el-table-column label="产品分类" align="center" prop="productType"/>
+      <el-table-column label="产品名称" align="center" prop="fileName"/>
       <el-table-column label="产品图片" align="center" prop="fileUrl">
         <template scope="scope">
           <img :src="`${GLOBAL.BASE_URL}/api/common/open/download?name=${scope.row.fileUrl}`" width="100px"
-            height="100px" />
+               height="100px"/>
         </template>
       </el-table-column>
-      <el-table-column label="产品说明" align="center" prop="manual" />
+      <el-table-column label="产品说明" align="center" prop="manual"/>
       <el-table-column label="产品参数" align="center" prop="productParam">
         <template scope="scope">
           <img :src="`${GLOBAL.BASE_URL}/api/common/open/download?name=${scope.row.productParam}`" width="100px"
-            height="100px" />
+               height="100px"/>
         </template>
       </el-table-column>
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template slot-scope="scope">
           <el-button size="mini" type="text" icon="el-icon-edit" @click="handleUpdate(scope.row)"
-            v-hasPermi="['system:post:edit']">修改</el-button>
+                     v-hasPermi="['system:post:edit']">修改
+          </el-button>
           <el-button size="mini" type="text" icon="el-icon-delete" @click="handleDeleteById(scope.row)"
-            v-hasPermi="['system:post:remove']">删除</el-button>
+                     v-hasPermi="['system:post:remove']">删除
+          </el-button>
         </template>
       </el-table-column>
     </el-table>
 
     <pagination v-show="total > 0" :total="total" :page.sync="queryParams.page" :limit.sync="queryParams.pageSize"
-      @pagination="getList" />
+                @pagination="getList"/>
 
     <!-- 添加或修改产品对话框 -->
     <el-dialog :title="title" :visible.sync="open" width="500px" append-to-body>
       <el-form ref="form" :model="form" :rules="rules" label-width="80px">
         <el-form-item label="产品名称" prop="fileName">
-          <el-input v-model="form.fileName" placeholder="请输入产品名称" />
+          <el-input v-model="form.fileName" placeholder="请输入产品名称"/>
         </el-form-item>
         <!-- 新增或者修改产品 -->
         <el-form-item label="产品图片" prop="fileUrl">
           <el-upload class="upload-demo" :action="`${GLOBAL.BASE_URL}/api/common/upload`" :on-preview="handlePreview"
-            :on-remove="handleRemove" :before-remove="beforeRemove" multiple :limit="1" :on-exceed="handleExceed"
-            :file-list="fileList" :on-success="onSuccess" :headers="headers">
+                     :on-remove="handleRemove" :before-remove="beforeRemove" multiple :limit="1"
+                     :on-exceed="handleExceed"
+                     :file-list="fileList" :on-success="onSuccess" :headers="headers">
             <el-button size="small" type="primary" v-if="!this.form.id">点击上传</el-button>
             <div v-else>
               <img :src="`${GLOBAL.BASE_URL}/api/common/open/download?name=${this.form.fileUrl}`" width="100px"
-                height="100px" style="display: block; margin-bottom: 10px" />
+                   height="100px" style="display: block; margin-bottom: 10px"/>
               <el-button size="small" type="primary">点击更换产品图片</el-button>
             </div>
           </el-upload>
         </el-form-item>
         <el-form-item label="产品分类" prop="productType">
-          <el-input v-model="form.productType" placeholder="请输入产品名称" />
+          <el-cascader v-model="form.productType" :options="selectForm"
+                       :props="{label:'groupName' ,value:'id', expandTrigger: 'hover' ,checkStrictly:true }"
+                       @change="handleChange"
+                       clearable></el-cascader>
         </el-form-item>
         <el-form-item label="产品说明" prop="manual">
-          <el-input v-model="form.manual" placeholder="请输入产品说明" />
+          <el-input v-model="form.manual" placeholder="请输入产品说明"/>
         </el-form-item>
         <!-- 新增或者修改产品参数 -->
         <el-form-item label="产品参数" prop="productParam">
           <el-upload class="upload-demo" :action="`${GLOBAL.BASE_URL}/api/common/upload`"
-            :on-preview="productParamHandlePreview" :on-remove="productParamHandleRemove"
-            :before-remove="productParamHandBeforeRemove" multiple :limit="1" :on-exceed="productParamHandleExceed"
-            :file-list="productParamFileList" :on-success="productParamOnSuccess" :headers="headers">
+                     :on-preview="productParamHandlePreview" :on-remove="productParamHandleRemove"
+                     :before-remove="productParamHandBeforeRemove" multiple :limit="1"
+                     :on-exceed="productParamHandleExceed"
+                     :file-list="productParamFileList" :on-success="productParamOnSuccess" :headers="headers">
             <el-button size="small" type="primary" v-if="!this.form.id">点击上传</el-button>
             <div v-else>
               <img :src="`${GLOBAL.BASE_URL}/api/common/open/download?name=${this.form.productParam}`" width="100px"
-                height="100px" style="display: block; margin-bottom: 10px" />
+                   height="100px" style="display: block; margin-bottom: 10px" alt=""/>
               <el-button size="small" type="primary">点击更换产品参数图片</el-button>
             </div>
           </el-upload>
+          `
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
-        <el-button type="primary" @click="submitForm">确 定</el-button>
+        <el-button type="primary" @click="submitProductForm">确 定</el-button>
         <el-button @click="cancel">取 消</el-button>
       </div>
     </el-dialog>
@@ -111,17 +123,17 @@
       <PageTools :is-show-left="true">
         <!-- <template v-slot:left>一共有{{ total }}条数据</template> -->
         <template v-slot:right>
-          <el-button type="primary" size="small" @click="onAddPer(1, '0')">添加权限</el-button>
+          <el-button type="primary" size="small" @click="onAddPer(0, '0')">添加权限</el-button>
         </template>
       </PageTools>
       <el-card>
         <el-table border stripe :data="groupList" default-expand-all row-key="id">
-          <el-table-column align="center" label="名称" prop="groupName" />
+          <el-table-column align="center" label="名称" prop="groupName"/>
           <el-table-column align="center" label="操作" width="280px
                       ">
             <template v-slot="{ row }">
-              <el-button v-if="row.type === 1" type="primary" size="small" @click="onAddPer(2, row.id)">添加</el-button>
-              <el-button type="success" size="small" @click="onEdit(row.id)">编辑</el-button>
+              <el-button v-if="row.pid === 0" type="primary" size="small" @click="onAddPer(row.id, row.id)">添加
+              </el-button>
               <el-button type="warning" size="small" @click="delPerm(row.id)">删除</el-button>
             </template>
           </el-table-column>
@@ -131,13 +143,12 @@
 
 
     <el-dialog title="添加分类" :visible.sync="parantGroupVisible">
-      <el-form :model="ruleForm" status-icon :rules="rules" ref="ruleForm" label-width="100px" class="demo-ruleForm">
-        <el-form-item label="分类名称" prop="parantGroupName">
-          <el-input type="text" v-model="ruleForm.parantGroupName" autocomplete="off"></el-input>
+      <el-form :model="options" status-icon :rules="rules" ref="ruleForm" label-width="100px" class="demo-ruleForm">
+        <el-form-item label="分类名称" prop="groupName">
+          <el-input type="text" v-model="options.groupName" autocomplete="off"></el-input>
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" @click="submitForm('ruleForm')">提交</el-button>
-          <el-button @click="resetForm('ruleForm')">重置</el-button>
+          <el-button type="primary" @click="submitForm()">提交</el-button>
         </el-form-item>
       </el-form>
     </el-dialog>
@@ -156,7 +167,10 @@ import {
   addPost,
   updatePost,
   delImg,
-  getGroupList
+  getGroupList,
+  addGroup,
+  deleteGroup,
+  getByGroupById
 } from "@/api/system/post";
 
 export default {
@@ -168,13 +182,13 @@ export default {
   data() {
 
     return {
+      productType:[],
+      groupName: [],
+      selectForm: [],
       parantGroupVisible: false,
-      ruleForm: { parantGroupName: '' },
+      ruleForm: {parantGroupName: ''},
       groupList: [],
-      options: [{
-        id: '0',
-        groupName: '顶级分类'
-      }],
+      options: {groupName: ''},
       dialogFormVisible: false,
       headers: {
         Authorization: "Bearer " + store.getters.token, //headers属性中添加token，这个属性是el-upload自带的用来设置上传请求头部
@@ -212,13 +226,13 @@ export default {
       // 表单校验
       rules: {
         fileName: [
-          { required: true, message: "产品名称不能为空", trigger: "blur" },
+          {required: true, message: "产品名称不能为空", trigger: "blur"},
         ],
         productType: [
-          { required: true, message: "产品类型不能为空", trigger: "blur" },
+          {required: true, message: "产品类型不能为空", trigger: "blur"},
         ],
         manual: [
-          { required: true, message: "产品说明不能为空", trigger: "blur" },
+          {required: true, message: "产品说明不能为空", trigger: "blur"},
         ],
       },
     };
@@ -227,17 +241,42 @@ export default {
     this.getList();
   },
   methods: {
+    submitProductForm: function () {
+      this.$refs["form"].validate((valid) => {
+        if (valid) {
+          if (this.form.id !== undefined) {
+            updatePost(this.form).then((response) => {
+              this.$modal.msgSuccess("修改成功");
+              this.open = false;
+              this.getList();
+            });
+          } else {
+            addPost(this.form).then((response) => {
+              this.$modal.msgSuccess("新增成功");
+              this.open = false;
+              this.getList();
+            });
+          }
+        }
+      });
+    },
+    handleChange(value) {
+      console.log(value)
+    },
     async addGroup() {
       this.dialogFormVisible = true
       const res = await getGroupList()
       this.groupList = res.data
+      console.log(this.groupList)
+
     },
     async delPerm(id) {
       try {
         await this.$confirm('你确定要删除该权限点吗')
-        await delPermission(id)
+        console.log(id)
+        let axiosResponse = await deleteGroup(id);
         this.$message.success('删除成功')
-        this.loadPermissionList()
+        await this.addGroup()
       } catch (error) {
         this.$message.error('删除失败')
       }
@@ -253,9 +292,11 @@ export default {
       this.type = 1
       this.id = ''
     },
-    onEdit(id) {
-      this.isVisible = true
-      this.$refs.perFormRef.getPerDetail(id)
+    async onEdit(id) {
+      this.parantGroupVisible = true
+      let groupByIdRes = await getByGroupById(id)
+      console.log(groupByIdRes.data.groupName)
+      this.options.groupName = groupByIdRes.data.groupName
     },
     handleDeleteById(row) {
       let deleteArr = [];
@@ -269,7 +310,8 @@ export default {
           this.getList();
           this.$modal.msgSuccess("删除成功");
         })
-        .catch(() => { });
+        .catch(() => {
+        });
     },
     /** 查询产品列表 */
     getList() {
@@ -309,7 +351,7 @@ export default {
     // 多选框选中数据
     handleSelectionChange(selection) {
       this.ids = selection.map((item) => item.id);
-      this.single = selection.length != 1;
+      this.single = selection.length !== 1;
       this.multiple = !selection.length;
     },
     /** 新增按钮操作 */
@@ -319,7 +361,10 @@ export default {
       this.title = "添加产品";
     },
     /** 修改按钮操作 */
-    handleUpdate(row) {
+    async handleUpdate(row) {
+      const groupRes = await getGroupList()
+      this.selectForm = groupRes.data
+      console.log(this.selectForm)
       this.reset();
       const id = row.id || this.ids;
       getPost(id).then((response) => {
@@ -329,24 +374,18 @@ export default {
       });
     },
     /** 提交按钮 */
-    submitForm: function () {
-      this.$refs["form"].validate((valid) => {
-        if (valid) {
-          if (this.form.id != undefined) {
-            updatePost(this.form).then((response) => {
-              this.$modal.msgSuccess("修改成功");
-              this.open = false;
-              this.getList();
-            });
-          } else {
-            addPost(this.form).then((response) => {
-              this.$modal.msgSuccess("新增成功");
-              this.open = false;
-              this.getList();
-            });
-          }
-        }
-      });
+    async submitForm() {
+      console.log(this.options);
+      this.options.pid = this.type;
+
+      let response = await addGroup(this.options);
+      if (response.code === 200) {
+        this.$message.success('添加成功')
+      } else {
+        this.$message.error('添加失败')
+      }
+      this.parantGroupVisible = false
+      await this.addGroup()
     },
     /** 删除按钮操作 */
     handleDelete() {
@@ -360,7 +399,8 @@ export default {
           this.getList();
           this.$modal.msgSuccess("删除成功");
         })
-        .catch(() => { });
+        .catch(() => {
+        });
     },
     /** 导出按钮操作 */
     handleExport() {

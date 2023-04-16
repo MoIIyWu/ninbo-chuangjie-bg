@@ -1,5 +1,31 @@
 import request from "@/utils/request";
 
+// 根据ID获取分类
+export function getByGroupById(id) {
+  return request({
+    url: "/api/group/open/getByGroupById?id=" + id,
+    method: "get",
+  });
+}
+
+// 删除分类
+export function deleteGroup(id) {
+  return request({
+    url: "/api/group/deleteGroupById?id=" + id,
+    method: "delete",
+  });
+}
+
+
+// 添加分类
+export function addGroup(group) {
+  return request({
+    url: "/api/group/addGroup",
+    method: "post",
+    data: group
+  });
+}
+
 // 获取所有分类
 export function getGroupList() {
   return request({
