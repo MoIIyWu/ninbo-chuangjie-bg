@@ -488,10 +488,14 @@ export default {
       this.multiple = !selection.length;
     },
     /** 新增按钮操作 */
-    handleAdd() {
+    async handleAdd() {
       this.reset();
       this.open = true;
       this.title = "添加产品";
+
+      const groupRes = await getGroupList();
+      this.selectForm = groupRes.data;
+      console.log(this.selectForm);
     },
     /** 修改按钮操作 */
     async handleUpdate(row) {
